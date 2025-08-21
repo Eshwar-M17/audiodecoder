@@ -22,7 +22,9 @@ class FileDetailsCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFF20B2AA),
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF6366F1), const Color(0xFF4A90E2)],
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(

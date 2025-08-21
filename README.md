@@ -1,21 +1,51 @@
-# Audio Decoder (Clean Architecture)
+# Audio Decoder
 
-This repository contains a refactored Flutter project implementing a WAV-to-text decoder using FFT.
-It follows Clean Architecture (Domain / Data / Presentation) and uses `fpdart` for functional error handling.
+Flutter app that decodes simple tone-based audio into text and visualizes playback.
 
-## Structure
-- `lib/domain` - Entities, repositories, use-cases
-- `lib/data` - Services (WAV parser, FFT), repository implementations, datasources
-- `lib/presentation` - Riverpod providers, state notifiers, UI pages and widgets
-- `test` - Basic unit tests that generate synthetic sine waves
+- Clean Architecture (Domain / Data / Presentation)
+- Riverpod for state management
+- FFT-based signal extraction
+- Waveform-based audio playback and Spectrogram heatmap
 
-## How to use
-1. `flutter pub get`
-2. Open the project in your IDE (Android Studio / VS Code) under Flutter.
-3. Run `flutter run` to launch the example UI.
-4. Use the UI to pick a WAV file and decode.
+## Features
+- Pick an audio file and play/pause with enhanced controls
+- Waveform seek/preview via `audio_waveforms`
+- Frequency Spectrogram (heat map) via `fl_heatmap`
+- Live status + decoded message, with one-tap copy
 
-## Notes
-- This is a template codebase: tune segmentation and mapping tolerances for your data.
-- Tests are included in `test/audio_processing_service_test.dart`.
+## Tech Stack
+- Flutter 3
+- Riverpod 2
+- audioplayers (playback)
+- audio_waveforms (waveform + player controller)
+- fl_heatmap (spectrogram heat map)
+- fftea (FFT)
+- fpdart (functional types)
+
+## Project Structure
+- `lib/domain` – entities, repositories, use-cases
+- `lib/data` – datasources and implementations (audio processing)
+- `lib/presentation` – providers and UI widgets/pages
+- `test` – unit and widget tests
+
+## Getting Started
+1. Install Flutter and a recent stable channel.
+2. Fetch dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Run the app:
+   ```bash
+   flutter run
+   ```
+
+## Usage
+1. Tap "Upload Audio File" and pick a local file (WAV preferred).
+2. Use the  playback controls to play/pause and adjust volume.
+3. Seek using the waveform.
+4. Tap "Start Decoding" to analyze and decode the message.
+5. View results:
+   - Decoded message card with copy button
+   - Frequency Spectrogram heat map (rows = frequency bins, columns = time bins)
+   - Characters labeled under the spectrogram X‑axis
 

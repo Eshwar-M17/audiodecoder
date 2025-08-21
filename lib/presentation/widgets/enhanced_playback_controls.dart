@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:audio_waveforms/audio_waveforms.dart' as waveform;
 
 class EnhancedPlaybackControls extends StatefulWidget {
   final String filePath;
@@ -15,17 +16,21 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
   bool _isPlaying = false;
+  late final waveform.PlayerController playerController;
+
   double _volume = 1.0;
 
   @override
   void initState() {
     super.initState();
     _player = AudioPlayer();
+    playerController = waveform.PlayerController();
+
     _init();
   }
 
   Future<void> _init() async {
-    await _setSource();
+    await _setSource(widget.filePath);
     _player.onDurationChanged.listen((d) {
       if (!mounted) return;
       setState(() {
@@ -53,10 +58,12 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
     });
   }
 
-  Future<void> _setSource() async {
+  Future<void> _setSource(audiopath) async {
     await _player.stop();
     await _player.setReleaseMode(ReleaseMode.stop);
     await _player.setSource(DeviceFileSource(widget.filePath));
+    playerController.preparePlayer(path: audiopath);
+
     _position = Duration.zero;
   }
 
@@ -64,13 +71,14 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
   void didUpdateWidget(covariant EnhancedPlaybackControls oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.filePath != widget.filePath) {
-      _setSource();
+      _setSource(widget.filePath);
     }
   }
 
   @override
   void dispose() {
     _player.dispose();
+    playerController.dispose();
     super.dispose();
   }
 
@@ -109,23 +117,38 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
               ],
             ),
             const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(0xFF4A90E2),
-                inactiveTrackColor: const Color(0xFF404040),
-                thumbColor: const Color(0xFF4A90E2),
-                overlayColor: const Color(0xFF4A90E2).withOpacity(0.2),
-              ),
-              child: Slider(
-                value: max == 0 ? 0 : value,
-                max: max == 0 ? 1 : max,
-                onChanged: (nv) async {
-                  final pos = Duration(milliseconds: nv.round());
-                  await _player.seek(pos);
-                },
+            SizedBox(
+              height: 70,
+              child: waveform.AudioFileWaveforms(
+                size: Size(MediaQuery.of(context).size.width, 60),
+                playerController: playerController,
+                enableSeekGesture: true,
+                playerWaveStyle: waveform.PlayerWaveStyle(
+                  fixedWaveColor: const Color(0xFF404040),
+                  liveWaveColor: const Color(0xFF4A90E2),
+                  spacing: 6,
+                  showSeekLine: false,
+                ),
               ),
             ),
-            const SizedBox(height: 16),
+
+            // SliderTheme(
+            //   data: SliderTheme.of(context).copyWith(
+            //     activeTrackColor: const Color(0xFF4A90E2),
+            //     inactiveTrackColor: const Color(0xFF404040),
+            //     thumbColor: const Color(0xFF4A90E2),
+            //     overlayColor: const Color(0xFF4A90E2).withOpacity(0.2),
+            //   ),
+            //   child: Slider(
+            //     value: max == 0 ? 0 : value,
+            //     max: max == 0 ? 1 : max,
+            //     onChanged: (nv) async {
+            //       final pos = Duration(milliseconds: nv.round());
+            //       await _player.seek(pos);
+            //     },
+            //   ),
+            // ),
+            // const SizedBox(height: 16),
 
             // Play button and volume control
             Row(
@@ -135,7 +158,9 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
                   width: 56,
                   height: 56,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF4A90E2),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF4A90E2)],
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -146,9 +171,11 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
                     ),
                     onPressed: () async {
                       if (_isPlaying) {
-                        await _player.pause();
+                        await playerController.pausePlayer();
+                        setState(() => _isPlaying = false);
                       } else {
-                        await _player.play(DeviceFileSource(widget.filePath));
+                        await playerController.startPlayer();
+                        setState(() => _isPlaying = true);
                       }
                     },
                   ),
@@ -181,7 +208,7 @@ class _EnhancedPlaybackControlsState extends State<EnhancedPlaybackControls> {
                               setState(() {
                                 _volume = value;
                               });
-                              await _player.setVolume(value);
+                              await playerController.setVolume(value);
                             },
                           ),
                         ),
